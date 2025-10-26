@@ -9,6 +9,26 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Utility function to poll AssemblyAI until transcript is ready
+const pollTranscript = async (transcriptId) => {
+  while (true) {
+    const res = await axios.get(
+      `https://api.assemblyai.com/v2/transcript/${transcriptId}`,
+      {
+        headers: { authorization: process.env.ASSEMBLYAI_API_KEY },
+      }
+    );
+
+    const transcript = res.data;
+
+    if (transcript.status === "completed") return transcript;
+    if (transcript.status === "error") throw new Error(transcript.error);
+
+    console.log("⏳ Transcription in progress...");
+    await new Promise((r) => setTimeout(r, 5000)); // wait 5 sec before next poll
+  }
+};
+
 // 🎧 AssemblyAI Transcription Route
 app.post("/transcribe", async (req, res) => {
   try {
@@ -18,8 +38,10 @@ app.post("/transcribe", async (req, res) => {
     }
 
     console.log("🎬 Transcribing from AssemblyAI:", videoUrl);
-    console.log("🔑 AssemblyAI Key:", process.env.ASSEMBLYAI_API_KEY);
-
+    console.log(
+      "🔑 AssemblyAI Key:",
+      process.env.ASSEMBLYAI_API_KEY ? "✅ Found" : "❌ Missing"
+    );
 
     // Step 1️⃣ Send video URL to AssemblyAI
     const response = await axios.post(
@@ -36,34 +58,22 @@ app.post("/transcribe", async (req, res) => {
     const transcriptId = response.data.id;
 
     // Step 2️⃣ Poll until transcription completes
-    let transcript;
-    while (true) {
-      const pollRes = await axios.get(
-        `https://api.assemblyai.com/v2/transcript/${transcriptId}`,
-        {
-          headers: { authorization: process.env.ASSEMBLYAI_API_KEY },
-        }
-      );
-      transcript = pollRes.data;
-
-      if (transcript.status === "completed") break;
-      if (transcript.status === "error") throw new Error(transcript.error);
-
-      console.log("⏳ Transcription in progress...");
-      await new Promise((r) => setTimeout(r, 5000)); // wait 5 sec before next poll
-    }
+    const transcript = await pollTranscript(transcriptId);
 
     // Step 3️⃣ Return transcript
     res.json({ text: transcript.text });
-
   } catch (error) {
-    console.error("❌ Transcription Error:", error.response?.data || error.message);
+    console.error(
+      "❌ Transcription Error:",
+      error.response?.data || error.message
+    );
     res.status(500).json({ error: "Transcription failed" });
   }
 });
 
+// Health check route
 app.get("/", (req, res) => {
-  res.send("Welcome to the VT-Backend API");
+  res.send("Welcome to the VT-Backend API 🚀");
 });
 
 const PORT = process.env.PORT || 5000;
