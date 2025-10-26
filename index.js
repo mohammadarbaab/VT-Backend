@@ -6,7 +6,17 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// ✅ CORS Fix: allow localhost + Render frontend
+app.use(cors({
+  origin: [
+    "http://localhost:3000", // local frontend
+    "https://vt-project-du6f.onrender.com" // deployed frontend
+  ],
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"],
+}));
+
 app.use(express.json());
 
 // 🎧 AssemblyAI Transcription Route
@@ -18,8 +28,7 @@ app.post("/transcribe", async (req, res) => {
     }
 
     console.log("🎬 Transcribing from AssemblyAI:", videoUrl);
-    console.log("🔑 AssemblyAI Key:", process.env.ASSEMBLYAI_API_KEY);
-
+    console.log("🔑 AssemblyAI Key:", process.env.ASSEMBLYAI_API_KEY ? "✅ Loaded" : "❌ Missing");
 
     // Step 1️⃣ Send video URL to AssemblyAI
     const response = await axios.post(
@@ -50,7 +59,7 @@ app.post("/transcribe", async (req, res) => {
       if (transcript.status === "error") throw new Error(transcript.error);
 
       console.log("⏳ Transcription in progress...");
-      await new Promise((r) => setTimeout(r, 5000)); // wait 5 sec before next poll
+      await new Promise((r) => setTimeout(r, 5000)); // wait 5 sec
     }
 
     // Step 3️⃣ Return transcript
@@ -58,13 +67,15 @@ app.post("/transcribe", async (req, res) => {
 
   } catch (error) {
     console.error("❌ Transcription Error:", error.response?.data || error.message);
-    res.status(500).json({ error: "Transcription failed" });
+    res.status(500).json({ error: error.response?.data?.error || "Transcription failed" });
   }
 });
 
+// 🌐 Default route (for testing)
 app.get("/", (req, res) => {
-  res.send("Welcome to the VT-Backend API");
+  res.send("✅ VT-Backend is live and running!");
 });
 
+// 🚀 Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
