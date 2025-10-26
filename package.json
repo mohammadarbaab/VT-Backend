@@ -1,0 +1,28 @@
+{
+  "name": "vt-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mohammadarbaab/VT-Backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mohammadarbaab/VT-Backend/issues"
+  },
+  "homepage": "https://github.com/mohammadarbaab/VT-Backend#readme",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.12.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "form-data": "^4.0.4",
+    "openai": "^6.7.0"
+  }
+}
