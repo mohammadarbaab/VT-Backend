@@ -9,7 +9,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Utility function to poll AssemblyAI until transcript is ready
 const pollTranscript = async (transcriptId) => {
   while (true) {
     const res = await axios.get(
@@ -29,7 +28,6 @@ const pollTranscript = async (transcriptId) => {
   }
 };
 
-// 🎧 AssemblyAI Transcription Route
 app.post("/transcribe", async (req, res) => {
   try {
     const { videoUrl } = req.body;
@@ -37,10 +35,10 @@ app.post("/transcribe", async (req, res) => {
       return res.status(400).json({ error: "Video URL required" });
     }
 
-    console.log("🎬 Transcribing from AssemblyAI:", videoUrl);
+    console.log("Transcribing from AssemblyAI:", videoUrl);
     console.log(
       "🔑 AssemblyAI Key:",
-      process.env.ASSEMBLYAI_API_KEY ? "✅ Found" : "❌ Missing"
+      process.env.ASSEMBLYAI_API_KEY ? " Found" : " Missing"
     );
 
     // Step 1️⃣ Send video URL to AssemblyAI
@@ -57,10 +55,8 @@ app.post("/transcribe", async (req, res) => {
 
     const transcriptId = response.data.id;
 
-    // Step 2️⃣ Poll until transcription completes
     const transcript = await pollTranscript(transcriptId);
 
-    // Step 3️⃣ Return transcript
     res.json({ text: transcript.text });
   } catch (error) {
     console.error(
@@ -71,7 +67,6 @@ app.post("/transcribe", async (req, res) => {
   }
 });
 
-// Health check route
 app.get("/", (req, res) => {
   res.send("Welcome to the VT-Backend API 🚀");
 });
